@@ -1,0 +1,5 @@
+{
+  "name": "Copy of 우리가게 리뷰 답글 생성기",
+  "description": "우리가게의 리뷰 사진을 넣으면 자동으로 리뷰 텍스트를 생성해주는 생성기",
+  "requestFramePermissions": []
+}
