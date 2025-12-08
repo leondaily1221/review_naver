@@ -1,5 +1,24 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { StoreInfo } from "../components/StoreInfoForm";
+
+export const validateApiKey = async (apiKey: string): Promise<boolean> => {
+    try {
+        const ai = new GoogleGenAI({ apiKey });
+        // Make a minimal request to test the key
+        await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: [{ text: "test" }] },
+            config: {
+                maxOutputTokens: 1,
+            }
+        });
+        return true;
+    } catch (error) {
+        console.error("API Key validation failed:", error);
+        return false;
+    }
+};
 
 export const generateReviewReply = async (imageBase64Data: string, mimeType: string, storeInfo: StoreInfo, charLimit: number | null, apiKey: string): Promise<string> => {
     if (!apiKey) {

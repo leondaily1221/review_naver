@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Loader } from './components/Loader';
 import { generateReviewReply, analyzeReviewsForImprovements } from './services/geminiService';
@@ -6,6 +7,8 @@ import { ReviewProcessor } from './components/ReviewProcessor';
 import { AnalysisModal } from './components/AnalysisModal';
 import { ThemeToggle } from './components/ThemeToggle';
 import { InstructionsModal } from './components/InstructionsModal';
+import { ApiKeyManagerModal } from './components/ApiKeyManagerModal';
+import { KeyIcon, QuestionMarkCircleIcon } from './components/Icons';
 
 
 export interface ReviewSlot {
@@ -28,7 +31,6 @@ export interface AnalysisResult {
   summary: string;
 }
 
-// Fix: Add types for generation results to ensure proper type inference from Promise.all.
 type GenerationSuccess = { id: number; success: true; reply: string; };
 type GenerationFailure = { id: number; success: false; error: string; };
 type GenerationResult = GenerationSuccess | GenerationFailure;
@@ -36,7 +38,6 @@ type GenerationResult = GenerationSuccess | GenerationFailure;
 
 const DAILY_LIMIT = 20;
 
-// Helper function to get the current date string in KST (UTC+9)
 const getKSTDateString = (): string => {
     const now = new Date();
     const utc = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
@@ -68,6 +69,7 @@ const App: React.FC = () => {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
+  const [isApiKeyManagerOpen, setIsApiKeyManagerOpen] = useState(false);
 
 
   useEffect(() => {
@@ -75,12 +77,8 @@ const App: React.FC = () => {
         const todayKST = getKSTDateString();
         const storedDate = localStorage.getItem('usageDate');
         const storedCount = localStorage.getItem('usageCount');
-        const storedApiKey = localStorage.getItem('gemini-api-key');
-
-        if (storedApiKey) {
-            setApiKey(storedApiKey);
-        }
-
+        // Removed: localStorage for apiKey
+        
         if (storedDate === todayKST && storedCount) {
             setUsageCount(Number(storedCount));
         } else {
@@ -89,19 +87,15 @@ const App: React.FC = () => {
             setUsageCount(0);
         }
     } catch (error) {
-        console.warn("Could not access localStorage. Usage counting and API key will not be persisted.", error);
+        console.warn("Could not access localStorage. Usage counting will not be persisted.", error);
         setUsageCount(0);
     }
   }, []);
 
-  const handleSaveApiKey = (key: string) => {
+  const handleApiKeyLoaded = (key: string) => {
     setApiKey(key);
-    try {
-      localStorage.setItem('gemini-api-key', key);
-    } catch (error) {
-      console.warn("Could not save API key to localStorage.", error);
-    }
-    setIsInstructionsModalOpen(false);
+    // Remove error messages related to missing API keys
+    setReviewSlots(prev => prev.map(slot => slot.error && slot.error.includes('API 키') ? { ...slot, error: null } : slot));
   };
 
   const handleStoreInfoChange = useCallback((field: keyof StoreInfo, value: string) => {
@@ -142,8 +136,8 @@ const App: React.FC = () => {
 
   const handleGenerateAll = useCallback(async () => {
       if (!apiKey) {
-        setIsInstructionsModalOpen(true);
-        setReviewSlots(prev => prev.map((slot, index) => index === 0 ? {...slot, error: 'API 키를 먼저 설정해주세요. 우측 상단 (?) 아이콘을 클릭하세요.'} : slot));
+        setIsApiKeyManagerOpen(true);
+        setReviewSlots(prev => prev.map((slot, index) => index === 0 ? {...slot, error: 'API 키가 로드되지 않았습니다. 우측 상단 열쇠 아이콘을 클릭하여 키를 불러와주세요.'} : slot));
         return;
       }
 
@@ -180,12 +174,8 @@ const App: React.FC = () => {
           }
       });
 
-      // FIX: Explicitly type `results` to correct a type inference issue with `Promise.all`.
       const results: GenerationResult[] = await Promise.all(generationPromises);
       
-      // Fix: Refactored state update to use a more functional `map`-based approach.
-      // This is more idiomatic for React state updates and avoids potential type
-      // inference issues that can occur with imperative logic inside the updater.
       setReviewSlots(prevSlots => {
         const resultsMap = new Map(results.map(r => [r.id, r]));
         return prevSlots.map(slot => {
@@ -194,9 +184,6 @@ const App: React.FC = () => {
                 return slot;
             }
 
-            // FIX: Replaced if/else with a switch statement for more robust type narrowing
-            // of the GenerationResult discriminated union. This resolves a TypeScript error
-            // where the type was not being correctly inferred in the else branch.
             switch (result.success) {
               case true:
                 return { ...slot, isLoading: false, generatedReply: result.reply, error: null };
@@ -206,7 +193,6 @@ const App: React.FC = () => {
         });
       });
 
-      // FIX: Use a type guard to correctly filter for successful results and ensure type safety.
       const successfulResults = results.filter((r): r is GenerationSuccess => r.success);
       if (successfulResults.length > 0) {
           const newUsageCount = usageCount + successfulResults.length;
@@ -226,8 +212,8 @@ const App: React.FC = () => {
 
   const handleAnalyzeImprovements = useCallback(async () => {
     if (!apiKey) {
-        setIsInstructionsModalOpen(true);
-        setAnalysisError("API 키를 먼저 설정해주세요. 우측 상단 (?) 아이콘을 클릭하세요.");
+        setIsApiKeyManagerOpen(true);
+        setAnalysisError("API 키가 로드되지 않았습니다. 우측 상단 열쇠 아이콘을 클릭하여 키를 불러와주세요.");
         setIsAnalysisModalOpen(true);
         return;
     }
@@ -288,18 +274,31 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 flex flex-col items-center p-4 sm:p-6 lg:p-8 font-sans transition-colors duration-300">
       <div className="w-full max-w-5xl mx-auto">
-        <header className="flex justify-between items-center mb-8">
-            <div className="text-left">
-                <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">✨ 우리가게 리뷰 답글 생성기</h1>
+        <header className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <div className="text-left w-full sm:w-auto">
+                <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                    <span>✨ 우리가게 리뷰 답글 생성기</span>
+                </h1>
                 <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm sm:text-base">가게 정보를 한 번만 입력하고, 여러 리뷰에 대한 답글을 한번에 생성해보세요.</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${apiKey ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800' : 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800'}`}>
+                    <span className={`w-2 h-2 rounded-full ${apiKey ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`}></span>
+                    {apiKey ? 'API 연결됨' : 'API 미연결'}
+                </div>
+                <button
+                    onClick={() => setIsApiKeyManagerOpen(true)}
+                    className="p-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    title="API 키 매니저 (보안 키 파일 관리)"
+                >
+                    <KeyIcon />
+                </button>
                 <button
                     onClick={() => setIsInstructionsModalOpen(true)}
-                    className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-colors"
-                    aria-label="사용 설명서 보기 및 API 키 설정"
+                    className="p-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    title="사용 설명서"
                 >
-                    설명서 보기
+                    <QuestionMarkCircleIcon />
                 </button>
                 <ThemeToggle />
             </div>
@@ -372,8 +371,11 @@ const App: React.FC = () => {
        <InstructionsModal
             isOpen={isInstructionsModalOpen}
             onClose={() => setIsInstructionsModalOpen(false)}
-            currentApiKey={apiKey}
-            onApiKeySave={handleSaveApiKey}
+       />
+       <ApiKeyManagerModal
+            isOpen={isApiKeyManagerOpen}
+            onClose={() => setIsApiKeyManagerOpen(false)}
+            onApiKeyLoaded={handleApiKeyLoaded}
        />
     </div>
   );

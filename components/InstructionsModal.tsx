@@ -1,28 +1,15 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 
 interface InstructionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentApiKey: string;
-  onApiKeySave: (key: string) => void;
 }
 
-export const InstructionsModal: React.FC<InstructionsModalProps> = ({ isOpen, onClose, currentApiKey, onApiKeySave }) => {
-  const [apiKeyInput, setApiKeyInput] = useState(currentApiKey);
-  const [showKey, setShowKey] = useState(false);
-
-  useEffect(() => {
-    setApiKeyInput(currentApiKey);
-  }, [currentApiKey]);
-
+export const InstructionsModal: React.FC<InstructionsModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) {
     return null;
   }
-
-  const handleSave = () => {
-    onApiKeySave(apiKeyInput);
-    onClose();
-  };
 
   return (
     <div
@@ -38,31 +25,20 @@ export const InstructionsModal: React.FC<InstructionsModalProps> = ({ isOpen, on
       >
         <header className="p-5 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-slate-50 dark:bg-slate-800 rounded-t-2xl">
           <h2 id="instructions-modal-title" className="text-xl font-bold text-slate-800 dark:text-slate-100 text-center">
-            사용 안내 및 API 키 설정
+            사용 안내
           </h2>
         </header>
         <main className="p-6 sm:p-8 overflow-y-auto space-y-8 text-slate-700 dark:text-slate-300">
           
           <div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">🔑 API 키 설정</h3>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">🔑 API 키 관리 (중요)</h3>
             <p className="text-sm mb-3">
-              이 앱을 사용하려면 본인의 Google Gemini API 키가 필요합니다. 아래에 키를 입력하고 저장해주세요.
+              이 앱은 보안을 위해 API 키를 서버나 브라우저에 영구 저장하지 않습니다.
             </p>
-            <div className="relative">
-              <input
-                type={showKey ? 'text' : 'password'}
-                value={apiKeyInput}
-                onChange={(e) => setApiKeyInput(e.target.value)}
-                placeholder="여기에 API 키를 붙여넣으세요"
-                className="w-full p-3 pr-20 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-shadow"
-              />
-              <button
-                onClick={() => setShowKey(!showKey)}
-                className="absolute inset-y-0 right-0 px-4 text-sm font-semibold text-indigo-600 dark:text-indigo-400"
-              >
-                {showKey ? '숨기기' : '보기'}
-              </button>
-            </div>
+            <p className="text-sm">
+              우측 상단의 열쇠 아이콘(<span className="inline-block align-text-bottom"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg></span>)을 클릭하여 <strong>API 키 매니저</strong>를 실행하세요.
+              API 키를 암호화된 파일로 내 컴퓨터에 안전하게 저장하고, 필요할 때마다 불러와서 사용할 수 있습니다.
+            </p>
           </div>
 
           <div>
@@ -70,7 +46,7 @@ export const InstructionsModal: React.FC<InstructionsModalProps> = ({ isOpen, on
             <ol className="list-decimal list-inside space-y-2 text-sm">
                 <li><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline font-semibold">Google AI Studio</a>에 접속하여 구글 계정으로 로그인합니다.</li>
                 <li>'Create API key' 버튼을 클릭하여 새 API 키를 생성합니다.</li>
-                <li>생성된 키를 복사하여 위 입력창에 붙여넣고 '저장' 버튼을 누릅니다.</li>
+                <li>API 키 매니저에서 '새 키 파일 생성'을 선택하고 키를 등록하세요.</li>
                 <li className="text-xs text-slate-500 dark:text-slate-400">참고: API 사용은 Google의 정책에 따라 과금될 수 있습니다.</li>
             </ol>
           </div>
@@ -97,15 +73,9 @@ export const InstructionsModal: React.FC<InstructionsModalProps> = ({ isOpen, on
         <footer className="p-4 bg-slate-100 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 sticky bottom-0 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 font-semibold rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
-          >
-            닫기
-          </button>
-          <button
-            onClick={handleSave}
             className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
           >
-            저장
+            확인
           </button>
         </footer>
       </div>
