@@ -30,6 +30,28 @@ export const InstructionsModal: React.FC<InstructionsModalProps> = ({ isOpen, on
         </header>
         <main className="p-6 sm:p-8 overflow-y-auto space-y-8 text-slate-700 dark:text-slate-300">
           
+          {/* 배포 및 광고 섹션 (최상단 추가) */}
+          <div className="bg-indigo-50 dark:bg-indigo-900/30 p-6 rounded-xl border border-indigo-100 dark:border-indigo-800 text-sm leading-relaxed">
+            <p className="mb-4">
+              이 앱은 <span className="font-bold text-slate-900 dark:text-white underline decoration-indigo-500 underline-offset-4">AI마케팅 + 가맹거래사 마케팅에이전시 이지스비즈니스그룹</span>에서 소상공인들을 위하여 무료 배포 되고 있는 웹앱서비스 입니다.
+            </p>
+            <p className="mb-4 font-semibold text-red-600 dark:text-red-400">
+              무료서비스인 만큼 당 서비스는 예고없이 중단될 수 있습니다.
+            </p>
+            <div className="space-y-3 pt-4 border-t border-indigo-200 dark:border-indigo-800/50">
+              <p className="font-bold text-slate-800 dark:text-slate-100">
+                개발 운영 : 이지스비즈니스그룹 마케팅브랜딩팀 (📞 1660-0952)
+              </p>
+              <ul className="list-disc list-inside space-y-1.5 text-slate-600 dark:text-slate-400 font-medium">
+                <li>브랜드 마케팅, 플레이스 마케팅 등 브랜드 성장을 위한 마케팅이 필요한 경우</li>
+                <li>AI 답변에 내 브랜드가 채택되는 GEO, AEO 등의 AI 마케팅이 필요한 경우</li>
+              </ul>
+              <p className="mt-3 text-indigo-700 dark:text-indigo-300 font-bold">
+                언제든지 위 전화번호로 연락주시면 정성껏 상담드리겠습니다.
+              </p>
+            </div>
+          </div>
+
           <div>
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">🔑 API 키 관리 (중요)</h3>
             <p className="text-sm mb-3">
