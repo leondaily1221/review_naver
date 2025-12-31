@@ -359,7 +359,7 @@ const App: React.FC = () => {
         </main>
       </div>
       <footer className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm mt-8">
-        <p>AGS 이지스비즈니스그룹</p>
+        <p>AGS 이지스비즈니스그룹 (1660-0952)</p>
       </footer>
        <AnalysisModal
             isOpen={isAnalysisModalOpen}
